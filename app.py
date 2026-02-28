@@ -14,7 +14,7 @@ nltk_data_path = os.path.join(os.getcwd(), "nltk_data")
 if nltk_data_path not in nltk.data.path:
     nltk.data.path.append(nltk_data_path)
 
-# ps = PorterStemmer()
+ps = PorterStemmer()
 
 # Load trained model & vectorizer
 
