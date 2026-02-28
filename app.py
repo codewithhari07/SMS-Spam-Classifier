@@ -1,28 +1,35 @@
-
 import os
 import nltk
 from flask import Flask, render_template, request
 import pickle
-import nltk
 import string
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
 app = Flask(__name__)
 
-nltk_data_path = os.path.join(os.getcwd(), "nltk_data")
-if nltk_data_path not in nltk.data.path:
-    nltk.data.path.append(nltk_data_path)
+def download_nltk_resources():
+    resources = [
+        ("tokenizers/punkt", "punkt"),
+        ("tokenizers/punkt_tab", "punkt_tab"),
+        ("corpora/stopwords", "stopwords"),
+    ]
+
+    for path, name in resources:
+        try:
+            nltk.data.find(path)
+        except LookupError:
+            nltk.download(name)
+
+download_nltk_resources()
+
 
 ps = PorterStemmer()
+stop_words = set(stopwords.words("english"))
 
-# Load trained model & vectorizer
 
 model = pickle.load(open("model.pkl", "rb"))
 vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
-
-# loaded_model = pickle.load(open("model.pkl","rb"))
-# print(hasattr(loaded_model, "classes_"))
 
 
 def transform_text(text):
@@ -30,22 +37,22 @@ def transform_text(text):
     text = nltk.word_tokenize(text)
 
     y = []
-    for i in text:
-        if i.isalnum():
-            y.append(i)
+    for word in text:
+        if word.isalnum():
+            y.append(word)
 
     text = y[:]
     y.clear()
 
-    for i in text:
-        if i not in stopwords.words("english") and i not in string.punctuation:
-            y.append(i)
+    for word in text:
+        if word not in stop_words and word not in string.punctuation:
+            y.append(word)
 
     text = y[:]
     y.clear()
 
-    for i in text:
-        y.append(ps.stem(i))
+    for word in text:
+        y.append(ps.stem(word))
 
     return " ".join(y)
 
@@ -65,8 +72,8 @@ def predict():
 
     result = "Spam 🚨" if prediction == 1 else "Not Spam ✅"
 
-    return render_template("index.html",prediction=result, message=message)
+    return render_template("index.html", prediction=result, message=message)
 
-
+# -------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
